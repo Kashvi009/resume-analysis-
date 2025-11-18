@@ -5,7 +5,7 @@ from PyPDF2 import PdfReader
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv
-from report_generator import create_radar_chart, create_pdf_report
+from report_generator import create_radar_chart, create_bar_chart, create_pdf_report
 from io import StringIO
 
 # --- CONFIGURATION ---
@@ -20,7 +20,7 @@ except (AttributeError, TypeError):
     st.stop()
 
 # --- MODEL AND PROMPTS ---
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash-lite")
 
 prompt_template = """
 You are an expert ATS and career strategist. Your task is to perform a complete competency mapping of a resume against a job description.
@@ -87,6 +87,7 @@ def main():
         st.session_state.competency_df = pd.DataFrame()
         st.session_state.report_text = ""
         st.session_state.radar_chart = None
+        st.session_state.bar_chart = None
 
     # --- Input Section ---
     with st.expander("Step 1: Provide Inputs", expanded=not st.session_state.analysis_complete):
@@ -129,6 +130,7 @@ def main():
                     st.session_state.competency_df = df
                     st.session_state.report_text = report_text.strip()
                     st.session_state.radar_chart = create_radar_chart(df)
+                    st.session_state.bar_chart = create_bar_chart(df)
                     st.session_state.analysis_complete = True
                     st.rerun()
                 else:
@@ -140,27 +142,31 @@ def main():
     if st.session_state.analysis_complete:
         st.header("📊 Your Results Dashboard")
         
-        tab1, tab2, tab3 = st.tabs(["📈 AI-Fit Score & Review", "📋 Competency Matrix", "📄 Full Report"])
+        tab1, tab2, tab3, tab4 = st.tabs(["📈 AI-Fit Score & Review", "🎯 Competency Radar", "📊 Competency Bars", "📋 Full Report"])
 
         with tab1:
             st.subheader("AI-Fit Score & Review")
-            if st.session_state.radar_chart:
-                st.image(st.session_state.radar_chart, use_column_width=True)
             st.markdown(st.session_state.report_text)
 
         with tab2:
-            st.subheader("Competency Matrix")
-            st.dataframe(st.session_state.competency_df, use_container_width=True)
+            st.subheader("Competency Radar Chart")
+            if st.session_state.radar_chart:
+                st.image(st.session_state.radar_chart, use_column_width=True)
 
         with tab3:
-            st.subheader("Full Report")
-            st.markdown("### Competency Matrix")
+            st.subheader("Competency Bar Chart")
+            if st.session_state.bar_chart:
+                st.image(st.session_state.bar_chart, use_column_width=True)
+
+        with tab4:
+            st.subheader("Full Report Details")
+            st.markdown("#### Competency Matrix")
             st.dataframe(st.session_state.competency_df, use_container_width=True)
-            st.markdown("### Analysis & Review")
+            st.markdown("#### Analysis & Review")
             st.markdown(st.session_state.report_text)
             
             # --- Download Button ---
-            pdf_report = create_pdf_report(st.session_state.report_text, st.session_state.competency_df, st.session_state.radar_chart)
+            pdf_report = create_pdf_report(st.session_state.report_text, st.session_state.competency_df, st.session_state.radar_chart, st.session_state.bar_chart)
             st.download_button(
                 label="📥 Download Full Report as PDF",
                 data=pdf_report,

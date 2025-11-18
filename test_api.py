@@ -25,8 +25,8 @@ def test_gemini_api():
         genai.configure(api_key=api_key)
         print("✅ Gemini AI configured successfully.")
 
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        print("✅ Model 'gemini-1.5-flash' loaded.")
+        model = genai.GenerativeModel("gemini-2.5-flash-lite")
+        print("✅ Model 'gemini-2.5-flash-lite' loaded.")
 
         prompt = "This is a test prompt. If you see this, respond with a short success message."
         print(f"▶️ Sending test prompt: '{prompt}'")
